@@ -5,7 +5,7 @@ import App from "./App";
 
 describe("App", () => {
   it("mostra o logo como link", () => {
-    render(<MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={["/"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><App /></MemoryRouter>);
     expect(screen.getByRole("link", { name: "Barber Time" })).toBeInTheDocument();
   });
 });
