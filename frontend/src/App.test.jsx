@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import App from "./App";
+import { renderWithProviders } from "./test/renderWithProviders";
 
 describe("App", () => {
   it("mostra o logo como link", () => {
-    render(<MemoryRouter initialEntries={["/"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><App /></MemoryRouter>);
+    renderWithProviders(<App />);
     expect(screen.getByRole("link", { name: "Barber Time" })).toBeInTheDocument();
   });
 });
