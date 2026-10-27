@@ -1,7 +1,9 @@
 import { http, HttpResponse } from "msw";
 import { barbers, services } from "./fixtures";
 
-export const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3333/api";
+import { API_BASE } from "../api/client";
+
+export const BASE = API_BASE;
 
 export const handlers = [
   http.get(`${BASE}/services`, () => HttpResponse.json(services)),
