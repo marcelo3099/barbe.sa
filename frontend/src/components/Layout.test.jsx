@@ -37,7 +37,7 @@ describe("Layout", () => {
     renderWithProviders(<App />, { route: "/agendar", user: clientUser });
     await userEvent.click(await screen.findByRole("button", { name: "Sair" }));
     expect(screen.getByRole("link", { name: "Entrar" })).toBeInTheDocument();
-    expect(screen.getByTestId("location")).toHaveTextContent("/");
+    expect(screen.getByTestId("location")).toHaveTextContent(/^\/$/);
     expect(localStorage.getItem("bt_token")).toBeNull();
   });
 });

@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
@@ -24,8 +25,11 @@ export default function Layout({ className = "" }) {
   const links = user ? LINKS[user.role] ?? [] : [["/#servicos", "Serviços"]];
 
   function handleLogout() {
-    logout();
-    navigate("/");
+    // navegação e logout na mesma transição, senão a rota protegida redireciona para /entrar
+    startTransition(() => {
+      navigate("/");
+      logout();
+    });
   }
 
   return (
