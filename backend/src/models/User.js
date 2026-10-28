@@ -1,5 +1,5 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define(
     'User',
     {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -12,3 +12,13 @@ module.exports = (sequelize, DataTypes) =>
     },
     { tableName: 'users' },
   );
+
+  // Defense in depth: never serialize the password hash.
+  User.prototype.toJSON = function toJSON() {
+    const values = { ...this.get() };
+    delete values.passwordHash;
+    return values;
+  };
+
+  return User;
+};
