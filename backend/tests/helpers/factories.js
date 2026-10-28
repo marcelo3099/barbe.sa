@@ -1,4 +1,5 @@
-const bcrypt = require('bcrypt');
+const { hashPassword } = require('../../src/utils/password');
+const { signToken } = require('../../src/utils/jwt');
 const { User, Service, BusinessHours, TimeOff, Appointment } = require('../../src/models');
 
 let sequence = 0;
@@ -6,9 +7,6 @@ const nextId = () => {
   sequence += 1;
   return sequence;
 };
-
-// Single place that hashes passwords; Task 5 swaps it for utils/password.js.
-const hashPassword = (password) => bcrypt.hash(password, 4);
 
 async function createUser({
   role = 'CLIENT',
@@ -27,7 +25,7 @@ async function createUser({
     role,
     active,
   });
-  return { user, password };
+  return { user, password, token: signToken(user) };
 }
 
 function createService({
