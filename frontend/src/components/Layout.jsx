@@ -1,5 +1,5 @@
 import { startTransition } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const LINKS = {
@@ -22,6 +22,8 @@ const LINKS = {
 export default function Layout({ className = "" }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const barClass = className || (pathname === "/" ? "over-hero" : "");
   const links = user ? LINKS[user.role] ?? [] : [["/#servicos", "Serviços"]];
 
   function handleLogout() {
@@ -34,7 +36,7 @@ export default function Layout({ className = "" }) {
 
   return (
     <>
-      <header className={`topbar ${className}`.trim()}>
+      <header className={`topbar ${barClass}`.trim()}>
         <Link to="/" className="logo">Barber Time</Link>
         <nav className="nav">
           {links.map(([to, label]) => (
