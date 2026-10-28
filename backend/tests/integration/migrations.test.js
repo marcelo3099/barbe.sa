@@ -16,11 +16,17 @@ describe('migrations', () => {
     await queryInterface.dropAllTables();
     await queryInterface.dropAllEnums();
 
-    execSync('npx sequelize-cli db:migrate --env test', {
-      cwd: backendDir,
-      env: { ...process.env, NODE_ENV: 'test' },
-      stdio: 'pipe',
-    });
+    const cli = path.resolve(backendDir, 'node_modules/sequelize-cli/lib/sequelize');
+    try {
+      execSync(`node "${cli}" db:migrate --env test`, {
+        cwd: backendDir,
+        env: { ...process.env, NODE_ENV: 'test' },
+        stdio: 'pipe',
+      });
+    } catch (err) {
+      throw new Error(`db:migrate failed: ${err.message}
+${err.stderr?.toString()}`);
+    }
 
     for (const Model of [User, Service, BusinessHours, TimeOff, Appointment]) {
       const columns = Object.keys(await queryInterface.describeTable(Model.getTableName())).sort();
