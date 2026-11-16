@@ -6,6 +6,7 @@ const servicesRoutes = require('./services.routes');
 const barbersRoutes = require('./barbers.routes');
 const businessHoursRoutes = require('./businessHours.routes');
 const availabilityRoutes = require('./availability.routes');
+const appointmentsRoutes = require('./appointments.routes');
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.use('/services', servicesRoutes);
 router.use('/barbers', barbersRoutes);
 router.use('/business-hours', businessHoursRoutes);
 router.use('/availability', availabilityRoutes);
+router.use('/appointments', appointmentsRoutes);
 
 module.exports = router;

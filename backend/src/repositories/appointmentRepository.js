@@ -25,4 +25,27 @@ const findBusyForBarber = ({ barberId, from, to, transaction }) =>
     transaction,
   });
 
-module.exports = { include, findFutureScheduled, findBusyForBarber };
+const create = (data, transaction) => Appointment.create(data, { transaction });
+
+const findByIdWithRelations = (id, transaction) =>
+  Appointment.findByPk(id, { include, transaction });
+
+const findClientOverlap = ({ clientId, startsAt, endsAt, transaction }) =>
+  Appointment.findOne({
+    where: {
+      clientId,
+      status: 'SCHEDULED',
+      startsAt: { [Op.lt]: endsAt },
+      endsAt: { [Op.gt]: startsAt },
+    },
+    transaction,
+  });
+
+module.exports = {
+  include,
+  findFutureScheduled,
+  findBusyForBarber,
+  create,
+  findByIdWithRelations,
+  findClientOverlap,
+};

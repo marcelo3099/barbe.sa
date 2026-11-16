@@ -7,4 +7,12 @@ const update = (user, data) => user.update(data);
 const list = ({ role } = {}) =>
   User.findAll({ where: role ? { role } : {}, order: [['name', 'ASC']] });
 
-module.exports = { findById, findByEmail, create, update, list };
+const lockByIds = (ids, transaction) =>
+  User.findAll({
+    where: { id: ids },
+    order: [['id', 'ASC']],
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+module.exports = { findById, findByEmail, create, update, list, lockByIds };
