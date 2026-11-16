@@ -24,4 +24,15 @@ const appointmentJson = (a) => ({
   service: { id: a.service.id, name: a.service.name, durationMinutes: a.service.durationMinutes },
 });
 
-module.exports = { userJson, appointmentJson };
+const serviceJson = (s) => ({
+  id: s.id,
+  name: s.name,
+  description: s.description,
+  priceCents: s.priceCents,
+  durationMinutes: s.durationMinutes,
+  active: s.active,
+});
+
+const barberJson = (u) => ({ id: u.id, name: u.name });
+
+module.exports = { userJson, appointmentJson, serviceJson, barberJson };
