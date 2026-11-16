@@ -4,7 +4,10 @@ const userRepository = require('../repositories/userRepository');
 const appointmentRepository = require('../repositories/appointmentRepository');
 const availabilityService = require('./availabilityService');
 const { isSlotFree } = require('../domain/slots');
-const { localDateOf, addMinutes } = require('../utils/time');
+const { localDateOf, addMinutes, startOfLocalDay, endOfLocalDay } = require('../utils/time');
+const clock = require('../utils/clock');
+
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 async function resolveClient(actor, body) {
   if (actor.role === 'CLIENT') {
@@ -86,4 +89,64 @@ async function create(actor, body) {
   });
 }
 
-module.exports = { create };
+async function list(actor, filters = {}) {
+  const query = { status: filters.status };
+
+  if (actor.role === 'CLIENT') {
+    query.clientId = actor.id;
+  } else if (actor.role === 'BARBER') {
+    query.barberId = actor.id;
+  } else {
+    query.barberId = filters.barberId;
+  }
+
+  if (filters.from) query.from = startOfLocalDay(filters.from);
+  if (filters.to) query.to = endOfLocalDay(filters.to);
+
+  return appointmentRepository.list(query);
+}
+
+async function loadForAction(actor, id) {
+  const appointment = await appointmentRepository.findByIdWithRelations(id);
+  if (!appointment) throw AppError.of('NOT_FOUND', undefined, 'Agendamento não encontrado');
+  if (actor.role === 'CLIENT' && appointment.clientId !== actor.id) throw AppError.of('FORBIDDEN');
+  if (actor.role === 'BARBER' && appointment.barberId !== actor.id) throw AppError.of('FORBIDDEN');
+  return appointment;
+}
+
+async function cancel(actor, id, { reason } = {}) {
+  const appointment = await loadForAction(actor, id);
+  if (appointment.status !== 'SCHEDULED') throw AppError.of('INVALID_STATUS_TRANSITION');
+
+  if (actor.role === 'CLIENT') {
+    const leadMs = appointment.startsAt.getTime() - clock.now().getTime();
+    if (leadMs < TWO_HOURS_MS) throw AppError.of('CANCELLATION_WINDOW_CLOSED');
+  }
+
+  await appointment.update({
+    status: 'CANCELED',
+    canceledAt: clock.now(),
+    cancelReason: reason ?? null,
+  });
+  return appointment;
+}
+
+async function complete(actor, id, { paymentMethod }) {
+  const appointment = await loadForAction(actor, id);
+  if (appointment.status !== 'SCHEDULED') throw AppError.of('INVALID_STATUS_TRANSITION');
+  if (clock.now() < appointment.startsAt) throw AppError.of('APPOINTMENT_NOT_STARTED');
+
+  await appointment.update({ status: 'COMPLETED', paymentMethod, paidAt: clock.now() });
+  return appointment;
+}
+
+async function noShow(actor, id) {
+  const appointment = await loadForAction(actor, id);
+  if (appointment.status !== 'SCHEDULED') throw AppError.of('INVALID_STATUS_TRANSITION');
+  if (clock.now() < appointment.startsAt) throw AppError.of('APPOINTMENT_NOT_STARTED');
+
+  await appointment.update({ status: 'NO_SHOW' });
+  return appointment;
+}
+
+module.exports = { create, list, cancel, complete, noShow };

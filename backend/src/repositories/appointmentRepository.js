@@ -41,6 +41,19 @@ const findClientOverlap = ({ clientId, startsAt, endsAt, transaction }) =>
     transaction,
   });
 
+const list = ({ clientId, barberId, status, from, to }) => {
+  const where = {};
+  if (clientId) where.clientId = clientId;
+  if (barberId) where.barberId = barberId;
+  if (status) where.status = status;
+  if (from || to) {
+    where.startsAt = {};
+    if (from) where.startsAt[Op.gte] = from;
+    if (to) where.startsAt[Op.lt] = to;
+  }
+  return Appointment.findAll({ where, include, order: [['startsAt', 'ASC']] });
+};
+
 module.exports = {
   include,
   findFutureScheduled,
@@ -48,4 +61,5 @@ module.exports = {
   create,
   findByIdWithRelations,
   findClientOverlap,
+  list,
 };
