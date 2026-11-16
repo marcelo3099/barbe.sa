@@ -22,6 +22,7 @@ const findBusyForBarber = ({ barberId, from, to, transaction }) =>
       startsAt: { [Op.lt]: to },
       endsAt: { [Op.gt]: from },
     },
+    include,
     transaction,
   });
 

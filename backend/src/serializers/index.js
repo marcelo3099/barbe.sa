@@ -44,4 +44,19 @@ const businessHoursJson = (row) => ({
   closed: row.closed,
 });
 
-module.exports = { userJson, appointmentJson, serviceJson, barberJson, businessHoursJson };
+const timeOffJson = (t) => ({
+  id: t.id,
+  barberId: t.barberId,
+  startsAt: toIso(t.startsAt),
+  endsAt: toIso(t.endsAt),
+  reason: t.reason || null,
+});
+
+module.exports = {
+  userJson,
+  appointmentJson,
+  serviceJson,
+  barberJson,
+  businessHoursJson,
+  timeOffJson,
+};

@@ -10,4 +10,11 @@ const findOverlapping = ({ barberId, from, to, transaction }) => {
   return TimeOff.findAll({ where, transaction });
 };
 
-module.exports = { findOverlapping };
+const list = ({ barberId } = {}) =>
+  TimeOff.findAll({ where: barberId ? { barberId } : {}, order: [['startsAt', 'ASC']] });
+
+const findById = (id) => TimeOff.findByPk(id);
+const create = (data) => TimeOff.create(data);
+const destroy = (timeOff) => timeOff.destroy();
+
+module.exports = { findOverlapping, list, findById, create, destroy };

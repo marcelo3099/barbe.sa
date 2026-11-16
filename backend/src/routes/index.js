@@ -7,6 +7,7 @@ const barbersRoutes = require('./barbers.routes');
 const businessHoursRoutes = require('./businessHours.routes');
 const availabilityRoutes = require('./availability.routes');
 const appointmentsRoutes = require('./appointments.routes');
+const timeOffRoutes = require('./timeOff.routes');
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use('/barbers', barbersRoutes);
 router.use('/business-hours', businessHoursRoutes);
 router.use('/availability', availabilityRoutes);
 router.use('/appointments', appointmentsRoutes);
+router.use('/time-off', timeOffRoutes);
 
 module.exports = router;
