@@ -1,0 +1,57 @@
+import { startTransition } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+
+const LINKS = {
+  CLIENT: [
+    ["/agendar", "Agendar"],
+    ["/meus-agendamentos", "Meus agendamentos"],
+  ],
+  BARBER: [
+    ["/agenda", "Agenda"],
+    ["/bloqueios", "Bloqueios"],
+  ],
+  ADMIN: [
+    ["/admin/agenda", "Agenda"],
+    ["/admin/servicos", "Serviços"],
+    ["/admin/usuarios", "Usuários"],
+    ["/admin/horarios", "Horários"],
+  ],
+};
+
+export default function Layout({ className = "" }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const barClass = className || (pathname === "/" ? "over-hero" : "");
+  const links = user ? LINKS[user.role] ?? [] : [["/#servicos", "Serviços"]];
+
+  function handleLogout() {
+    // navegação e logout na mesma transição, senão a rota protegida redireciona para /entrar
+    startTransition(() => {
+      navigate("/");
+      logout();
+    });
+  }
+
+  return (
+    <>
+      <header className={`topbar ${barClass}`.trim()}>
+        <Link to="/" className="logo">Barber Time</Link>
+        <nav className="nav">
+          {links.map(([to, label]) => (
+            <Link key={to} to={to}>{label}</Link>
+          ))}
+          {user ? (
+            <button type="button" className="nav-link" onClick={handleLogout}>Sair</button>
+          ) : (
+            <Link to="/entrar">Entrar</Link>
+          )}
+        </nav>
+      </header>
+      <main>
+        <Outlet />
+      </main>
+    </>
+  );
+}
