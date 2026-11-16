@@ -14,4 +14,15 @@ const findFutureScheduled = ({ barberId, clientId, from, transaction }) => {
   return Appointment.findAll({ where, include, order: [['startsAt', 'ASC']], transaction });
 };
 
-module.exports = { include, findFutureScheduled };
+const findBusyForBarber = ({ barberId, from, to, transaction }) =>
+  Appointment.findAll({
+    where: {
+      barberId,
+      status: { [Op.ne]: 'CANCELED' },
+      startsAt: { [Op.lt]: to },
+      endsAt: { [Op.gt]: from },
+    },
+    transaction,
+  });
+
+module.exports = { include, findFutureScheduled, findBusyForBarber };
