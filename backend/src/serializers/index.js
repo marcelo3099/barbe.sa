@@ -35,4 +35,13 @@ const serviceJson = (s) => ({
 
 const barberJson = (u) => ({ id: u.id, name: u.name });
 
-module.exports = { userJson, appointmentJson, serviceJson, barberJson };
+const businessHoursJson = (row) => ({
+  weekday: row.weekday,
+  opensAt: row.opensAt,
+  closesAt: row.closesAt,
+  breakStartsAt: row.breakStartsAt ?? null,
+  breakEndsAt: row.breakEndsAt ?? null,
+  closed: row.closed,
+});
+
+module.exports = { userJson, appointmentJson, serviceJson, barberJson, businessHoursJson };

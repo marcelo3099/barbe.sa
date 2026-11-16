@@ -7,11 +7,11 @@ const include = [
   { model: Service, as: 'service', attributes: ['id', 'name', 'durationMinutes'] },
 ];
 
-const findFutureScheduled = ({ barberId, clientId, from }) => {
+const findFutureScheduled = ({ barberId, clientId, from, transaction }) => {
   const where = { status: 'SCHEDULED', startsAt: { [Op.gte]: from } };
   if (barberId) where.barberId = barberId;
   if (clientId) where.clientId = clientId;
-  return Appointment.findAll({ where, include, order: [['startsAt', 'ASC']] });
+  return Appointment.findAll({ where, include, order: [['startsAt', 'ASC']], transaction });
 };
 
 module.exports = { include, findFutureScheduled };
