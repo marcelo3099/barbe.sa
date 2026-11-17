@@ -13,7 +13,7 @@ describe("RequireRole", () => {
   it("redirects BARBER away from /agendar to /agenda", async () => {
     renderWithProviders(<App />, { route: "/agendar", user: barberUser });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent(/^\/agenda$/));
-    expect(screen.queryByRole("heading", { name: "Agendar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Agendar/ })).not.toBeInTheDocument();
   });
 
   it("keeps CLIENT out of /admin/usuarios", async () => {
@@ -30,13 +30,13 @@ describe("RequireRole", () => {
 
   it("lets the right role through", async () => {
     renderWithProviders(<App />, { route: "/agendar", user: clientUser });
-    expect(await screen.findByRole("heading", { name: "Agendar" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Agendar/ })).toBeInTheDocument();
     expect(screen.getByTestId("location")).toHaveTextContent("/agendar");
   });
 
   it("shows loading while the session is restored", async () => {
     renderWithProviders(<App />, { route: "/agendar", user: clientUser });
     expect(screen.getByText("Carregando...")).toBeInTheDocument();
-    await screen.findByRole("heading", { name: "Agendar" });
+    await screen.findByRole("heading", { name: /Agendar/ });
   });
 });
