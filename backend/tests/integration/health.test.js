@@ -11,5 +11,5 @@ test('GET /api/health responde 200 { status: "ok" }', async () => {
 
 test('conecta no banco de teste', async () => {
   await expect(sequelize.authenticate()).resolves.toBeUndefined();
-  expect(sequelize.getDatabase()).toBe('barber_time_test');
+  expect(sequelize.getDatabaseName()).toBe('barber_time_test');
 });
