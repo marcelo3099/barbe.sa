@@ -3,7 +3,7 @@ import { appointments as appointmentsApi, barbers as barbersApi } from "../../ap
 import AppointmentCard from "../../components/AppointmentCard";
 import CompleteDialog from "../../components/CompleteDialog";
 import ErrorMessage from "../../components/ErrorMessage";
-import { dayRange, formatDate, todayISODate } from "../../lib/datetime";
+import { formatDate, todayISODate } from "../../lib/datetime";
 import Booking from "../client/Booking";
 import "../../styles/pages.css";
 
@@ -44,6 +44,13 @@ function DayAgenda({ barberFilter = false }) {
   const [actionError, setActionError] = useState(null);
   const [open, setOpen] = useState(null); // { id, kind: "complete" | "cancel" }
   const [pendingId, setPendingId] = useState(null);
+  const [now, setNow] = useState(() => new Date());
+
+  // reavalia "Concluir"/"Faltou" com o passar do tempo, sem precisar recarregar a página
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (barberFilter) barbersApi.list().then(setBarbersList).catch(setLoadError);
@@ -54,7 +61,7 @@ function DayAgenda({ barberFilter = false }) {
     setList(null);
     setLoadError(null);
     appointmentsApi
-      .list({ ...dayRange(date), barberId: barberId || undefined })
+      .list({ from: date, to: date, barberId: barberId || undefined })
       .then((res) => {
         if (!cancelled) setList([...res].sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt)));
       })
@@ -81,8 +88,6 @@ function DayAgenda({ barberFilter = false }) {
     }
   }
 
-  const now = new Date();
-
   function actionsFor(a) {
     if (a.status !== "SCHEDULED") return null;
     const finishable = canFinish(a, now);
@@ -94,6 +99,19 @@ function DayAgenda({ barberFilter = false }) {
           onClose={() => setOpen(null)}
           onConfirm={(method) => run(a.id, () => appointmentsApi.complete(a.id, method))}
         />
+      );
+    }
+    if (open?.id === a.id && open.kind === "noShow") {
+      return (
+        <>
+          <span>Marcar que o cliente faltou?</span>
+          <button type="button" className="btn solid" disabled={busy} onClick={() => run(a.id, () => appointmentsApi.noShow(a.id))}>
+            Sim, marcar falta
+          </button>
+          <button type="button" className="btn" disabled={busy} onClick={() => setOpen(null)}>
+            Voltar
+          </button>
+        </>
       );
     }
     if (open?.id === a.id && open.kind === "cancel") {
@@ -125,7 +143,7 @@ function DayAgenda({ barberFilter = false }) {
           className="btn"
           disabled={!finishable || busy}
           title={finishable ? undefined : NOT_YET}
-          onClick={() => run(a.id, () => appointmentsApi.noShow(a.id))}
+          onClick={() => setOpen({ id: a.id, kind: "noShow" })}
         >
           Faltou
         </button>

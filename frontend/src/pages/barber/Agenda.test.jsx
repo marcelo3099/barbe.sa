@@ -1,8 +1,8 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
-import { dayRange, todayISODate } from "../../lib/datetime";
+import { describe, expect, it, vi } from "vitest";
+import { todayISODate } from "../../lib/datetime";
 import { appointment, barberUser } from "../../test/fixtures";
 import { BASE } from "../../test/handlers";
 import { renderWithProviders } from "../../test/renderWithProviders";
@@ -42,11 +42,11 @@ describe("Agenda", () => {
     renderWithProviders(<Agenda />, { user: barberUser });
     const today = todayISODate();
     await waitFor(() => expect(queries.length).toBe(1));
-    expect(queries[0]).toEqual(dayRange(today));
+    expect(queries[0]).toEqual({ from: today, to: today });
     await userEvent.click(screen.getByRole("button", { name: "Próximo dia ▶" }));
     const tomorrow = todayISODate(new Date(new Date(`${today}T12:00:00-03:00`).getTime() + 24 * HOUR));
     await waitFor(() => expect(queries.length).toBe(2));
-    expect(queries[1]).toEqual(dayRange(tomorrow));
+    expect(queries[1]).toEqual({ from: tomorrow, to: tomorrow });
   });
 
   it("complete sends payment method", async () => {
@@ -83,6 +83,7 @@ describe("Agenda", () => {
     server.use(http.patch(`${BASE}/appointments/12/no-show`, () => HttpResponse.json({ ...appt, status: "NO_SHOW" })));
     renderWithProviders(<Agenda />, { user: barberUser });
     await userEvent.click(await screen.findByRole("button", { name: "Faltou" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sim, marcar falta" }));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Faltou" })).not.toBeInTheDocument());
     expect(screen.getByText("Faltou")).toBeInTheDocument();
   });
@@ -113,6 +114,40 @@ describe("Agenda", () => {
     );
     expect(await screen.findByRole("status")).toHaveTextContent("Agendamento confirmado");
     expect(screen.queryByRole("link", { name: "Meus agendamentos" })).not.toBeInTheDocument();
+  });
+
+  it("no-show asks confirmation before sending", async () => {
+    let calls = 0;
+    const appt = appointment({ id: 13, startsAt: iso(-HOUR) });
+    captureQueries(() => [appt]);
+    server.use(
+      http.patch(`${BASE}/appointments/13/no-show`, () => {
+        calls += 1;
+        return HttpResponse.json({ ...appt, status: "NO_SHOW" });
+      }),
+    );
+    renderWithProviders(<Agenda />, { user: barberUser });
+    await userEvent.click(await screen.findByRole("button", { name: "Faltou" }));
+    expect(calls).toBe(0);
+    await userEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(screen.getByRole("button", { name: "Faltou" })).toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  it("finish buttons enable once start time passes without reload", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["setInterval", "clearInterval", "Date"] });
+    try {
+      captureQueries(() => [appointment({ startsAt: iso(60 * 1000) })]);
+      renderWithProviders(<Agenda />, { user: barberUser });
+      const complete = await screen.findByRole("button", { name: "Concluir" });
+      expect(complete).toBeDisabled();
+      await act(async () => {
+        vi.advanceTimersByTime(2 * 60 * 1000);
+      });
+      expect(screen.getByRole("button", { name: "Concluir" })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('empty day shows "Nenhum agendamento neste dia."', async () => {
