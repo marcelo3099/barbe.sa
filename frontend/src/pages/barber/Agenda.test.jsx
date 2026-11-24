@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -85,6 +85,34 @@ describe("Agenda", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Faltou" }));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Faltou" })).not.toBeInTheDocument());
     expect(screen.getByText("Faltou")).toBeInTheDocument();
+  });
+
+  it("barber books for client id", async () => {
+    let body;
+    captureQueries();
+    server.use(
+      http.get(`${BASE}/availability`, ({ request }) => {
+        expect(new URL(request.url).searchParams.get("barberId")).toBe(String(barberUser.id));
+        return HttpResponse.json({ date: "2026-11-03", slots: ["2026-11-03T09:00:00-03:00"] });
+      }),
+      http.post(`${BASE}/appointments`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ id: 50 }, { status: 201 });
+      }),
+    );
+    renderWithProviders(<Agenda />, { user: barberUser });
+    await userEvent.click(await screen.findByRole("button", { name: "Novo agendamento" }));
+    await userEvent.type(await screen.findByLabelText("ID do cliente"), "5");
+    await userEvent.click(await screen.findByRole("button", { name: /Corte clássico/ }));
+    expect(screen.queryByRole("button", { name: "Seu Jorge" })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByDisplayValue(""), { target: { value: "2026-11-03" } });
+    await userEvent.click(await screen.findByRole("button", { name: "09:00" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar agendamento" }));
+    await waitFor(() =>
+      expect(body).toEqual({ clientId: 5, barberId: barberUser.id, serviceId: 1, startsAt: "2026-11-03T09:00:00-03:00" }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent("Agendamento confirmado");
+    expect(screen.queryByRole("link", { name: "Meus agendamentos" })).not.toBeInTheDocument();
   });
 
   it('empty day shows "Nenhum agendamento neste dia."', async () => {

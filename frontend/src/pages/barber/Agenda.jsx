@@ -4,6 +4,7 @@ import AppointmentCard from "../../components/AppointmentCard";
 import CompleteDialog from "../../components/CompleteDialog";
 import ErrorMessage from "../../components/ErrorMessage";
 import { dayRange, formatDate, todayISODate } from "../../lib/datetime";
+import Booking from "../client/Booking";
 import "../../styles/pages.css";
 
 const DAY = 24 * 3600 * 1000;
@@ -17,7 +18,24 @@ function shiftDate(date, days) {
   return todayISODate(new Date(new Date(`${date}T12:00:00-03:00`).getTime() + days * DAY));
 }
 
-export default function Agenda({ barberFilter = false }) {
+// Rota /agenda do barbeiro: agenda do dia + atalho "Novo agendamento" (Booking com "ID do cliente").
+export default function BarberAgenda({ barberFilter = false }) {
+  const [booking, setBooking] = useState(false);
+  if (barberFilter) return <DayAgenda barberFilter />;
+  return (
+    <div className="page">
+      <h1>Minha agenda</h1>
+      <div className="toolbar">
+        <button type="button" className="btn solid" onClick={() => setBooking((b) => !b)}>
+          {booking ? "Voltar para a agenda" : "Novo agendamento"}
+        </button>
+      </div>
+      {booking ? <Booking forStaff /> : <DayAgenda />}
+    </div>
+  );
+}
+
+function DayAgenda({ barberFilter = false }) {
   const [date, setDate] = useState(() => todayISODate());
   const [barberId, setBarberId] = useState("");
   const [barbersList, setBarbersList] = useState([]);

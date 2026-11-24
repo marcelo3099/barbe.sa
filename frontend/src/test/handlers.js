@@ -8,4 +8,5 @@ export const BASE = API_BASE;
 export const handlers = [
   http.get(`${BASE}/services`, () => HttpResponse.json(services)),
   http.get(`${BASE}/barbers`, () => HttpResponse.json(barbers)),
+  http.get(`${BASE}/appointments`, () => HttpResponse.json([])),
 ];

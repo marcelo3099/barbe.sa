@@ -81,6 +81,16 @@ export default function Booking({ forStaff = false }) {
     setStartsAt(null);
   }
 
+  function resetAll() {
+    setConfirmedId(null);
+    setClientId("");
+    setServiceId(null);
+    if (!barberFixed) setBarberId(null);
+    setDate("");
+    setStartsAt(null);
+    setSubmitError(null);
+  }
+
   async function handleConfirm() {
     if (submitting) return;
     setSubmitting(true);
@@ -105,7 +115,13 @@ export default function Booking({ forStaff = false }) {
     return (
       <div className="booking-confirmed">
         <p role="status">Agendamento confirmado</p>
-        <Link to="/meus-agendamentos">Meus agendamentos</Link>
+        {forStaff ? (
+          <button type="button" className="btn" onClick={resetAll}>
+            Fazer outro agendamento
+          </button>
+        ) : (
+          <Link to="/meus-agendamentos">Meus agendamentos</Link>
+        )}
       </div>
     );
   }
