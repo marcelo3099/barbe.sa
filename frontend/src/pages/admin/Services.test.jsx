@@ -86,4 +86,21 @@ describe("Admin Services", () => {
     await waitFor(() => expect(body?.priceCents).toBe(5000));
     expect(await screen.findByRole("cell", { name: "R$ 50,00" })).toBeInTheDocument();
   });
+
+  it("shows field details from a 400", async () => {
+    server.use(
+      http.post(`${BASE}/services`, () =>
+        HttpResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "Dados inválidos", details: { description: ["Descrição muito longa"] } } },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderWithProviders(<Services />, { user: adminUser });
+    await screen.findByRole("cell", { name: "Corte clássico" });
+    await userEvent.type(screen.getByLabelText("Nome"), "Pezinho");
+    await userEvent.type(screen.getByLabelText("Preço"), "20");
+    await userEvent.click(screen.getByRole("button", { name: "Criar serviço" }));
+    expect(await screen.findByText("Descrição muito longa")).toBeInTheDocument();
+  });
 });

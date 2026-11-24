@@ -18,6 +18,14 @@ export function todayISODate(now = new Date()) {
   return ymdFmt.format(now);
 }
 
+export const GRID_MESSAGE = "Os horários precisam ser de 15 em 15 minutos.";
+
+// "HH:mm" na grade de 15 minutos da agenda
+export function isOnGrid(hhmm) {
+  const m = /^(\d{2}):(\d{2})$/.exec(hhmm ?? "");
+  return !!m && Number(m[2]) % 15 === 0;
+}
+
 export function dayRange(date) {
   return { from: `${date}T00:00:00-03:00`, to: `${date}T23:59:59-03:00` };
 }

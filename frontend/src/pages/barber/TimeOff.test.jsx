@@ -97,4 +97,36 @@ describe("TimeOff", () => {
     expect(deleted).toBe(1);
     expect(screen.getByText(/Banco/)).toBeInTheDocument();
   });
+
+  it("rejects times off the 15-minute grid client-side", async () => {
+    let posts = 0;
+    server.use(
+      http.get(`${BASE}/time-off`, () => HttpResponse.json([])),
+      http.post(`${BASE}/time-off`, () => {
+        posts += 1;
+        return HttpResponse.json({}, { status: 201 });
+      }),
+    );
+    renderWithProviders(<TimeOff />, { user: barberUser });
+    await fillForm({ start: "10:10", end: "11:00" });
+    await userEvent.click(screen.getByRole("button", { name: "Bloquear horário" }));
+    expect(await screen.findByText("Os horários precisam ser de 15 em 15 minutos.")).toBeInTheDocument();
+    expect(posts).toBe(0);
+  });
+
+  it("shows field details from a 400", async () => {
+    server.use(
+      http.get(`${BASE}/time-off`, () => HttpResponse.json([])),
+      http.post(`${BASE}/time-off`, () =>
+        HttpResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "Dados inválidos", details: { endsAt: ["Fim precisa ser depois do início"] } } },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderWithProviders(<TimeOff />, { user: barberUser });
+    await fillForm();
+    await userEvent.click(screen.getByRole("button", { name: "Bloquear horário" }));
+    expect(await screen.findByText("Fim precisa ser depois do início")).toBeInTheDocument();
+  });
 });

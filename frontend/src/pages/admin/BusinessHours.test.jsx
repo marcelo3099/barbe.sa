@@ -82,4 +82,26 @@ describe("BusinessHours", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Há agendamentos fora do novo horário.");
     expect(screen.getByText(/09:00 · Ana · Corte clássico/)).toBeInTheDocument();
   });
+
+  it("rejects times off the 15-minute grid client-side", async () => {
+    const puts = serve();
+    renderWithProviders(<BusinessHours />, { user: adminUser });
+    fireEvent.change(await screen.findByLabelText("Fecha (Sexta)"), { target: { value: "19:50" } });
+    await userEvent.click(screen.getByRole("button", { name: "Salvar horários" }));
+    expect(await screen.findByText("Os horários precisam ser de 15 em 15 minutos.")).toBeInTheDocument();
+    expect(puts.length).toBe(0);
+  });
+
+  it("shows field details from a 400", async () => {
+    serve({
+      put: () =>
+        HttpResponse.json(
+          { error: { code: "VALIDATION_ERROR", message: "Dados inválidos", details: { 3: ["Abertura precisa ser antes do fechamento"] } } },
+          { status: 400 },
+        ),
+    });
+    renderWithProviders(<BusinessHours />, { user: adminUser });
+    await userEvent.click(await screen.findByRole("button", { name: "Salvar horários" }));
+    expect(await screen.findByText("Abertura precisa ser antes do fechamento")).toBeInTheDocument();
+  });
 });

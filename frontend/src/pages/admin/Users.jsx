@@ -3,26 +3,13 @@ import { users as usersApi } from "../../api/endpoints";
 import { useAuth } from "../../auth/AuthContext";
 import ConflictList from "../../components/ConflictList";
 import ErrorMessage from "../../components/ErrorMessage";
+import FieldErrors from "../../components/FieldErrors";
 import "../../styles/pages.css";
 
 export const ROLE_LABELS = { CLIENT: "Cliente", BARBER: "Barbeiro", ADMIN: "Administrador" };
 const ROLES = Object.entries(ROLE_LABELS);
 
 const EMPTY_CREATE = { name: "", email: "", phone: "", password: "", role: "CLIENT" };
-
-function FieldErrors({ error }) {
-  const details = error?.details;
-  if (!details || Array.isArray(details) || typeof details !== "object") return null;
-  const messages = Object.values(details).flat();
-  if (messages.length === 0) return null;
-  return (
-    <ul className="conflicts">
-      {messages.map((m) => (
-        <li key={m}>{m}</li>
-      ))}
-    </ul>
-  );
-}
 
 function RoleSelect({ value, onChange, disabled = false }) {
   return (

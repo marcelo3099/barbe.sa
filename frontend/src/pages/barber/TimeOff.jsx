@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { timeOff as timeOffApi } from "../../api/endpoints";
 import ConflictList from "../../components/ConflictList";
 import ErrorMessage from "../../components/ErrorMessage";
-import { formatDate, formatTime, todayISODate } from "../../lib/datetime";
+import FieldErrors from "../../components/FieldErrors";
+import { GRID_MESSAGE, formatDate, formatTime, isOnGrid, todayISODate } from "../../lib/datetime";
 import "../../styles/pages.css";
 
 const EMPTY = { date: "", start: "", end: "", reason: "" };
@@ -40,6 +41,10 @@ export default function TimeOff() {
     setApiError(null);
     if (!form.date || !form.start || !form.end) {
       setFormError("Preencha data, início e fim.");
+      return;
+    }
+    if (!isOnGrid(form.start) || !isOnGrid(form.end)) {
+      setFormError(GRID_MESSAGE);
       return;
     }
     if (form.end <= form.start) {
@@ -101,6 +106,7 @@ export default function TimeOff() {
         </div>
         {formError && <p role="alert" className="error">{formError}</p>}
         <ErrorMessage error={apiError} />
+        <FieldErrors error={apiError} />
         <ConflictList error={apiError} />
         <button className="btn solid" type="submit" disabled={submitting}>
           Bloquear horário

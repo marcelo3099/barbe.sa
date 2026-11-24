@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { businessHours as businessHoursApi } from "../../api/endpoints";
 import ConflictList from "../../components/ConflictList";
 import ErrorMessage from "../../components/ErrorMessage";
+import FieldErrors from "../../components/FieldErrors";
+import { GRID_MESSAGE, isOnGrid } from "../../lib/datetime";
 import "../../styles/pages.css";
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -14,6 +16,8 @@ function toForm(row) {
 export function validateRow(row) {
   if (row.closed) return null;
   if (!row.opensAt || !row.closesAt) return "Informe a abertura e o fechamento.";
+  const times = [row.opensAt, row.closesAt, row.breakStartsAt, row.breakEndsAt].filter((t) => t !== "");
+  if (!times.every(isOnGrid)) return GRID_MESSAGE;
   if (!(row.opensAt < row.closesAt)) return "A abertura precisa ser antes do fechamento.";
   const hasStart = row.breakStartsAt !== "";
   const hasEnd = row.breakEndsAt !== "";
@@ -154,6 +158,7 @@ export default function BusinessHours() {
             </ul>
           )}
           <ErrorMessage error={apiError} />
+          <FieldErrors error={apiError} />
           <ConflictList error={apiError} showDate />
           {saved && <p role="status">Horários salvos.</p>}
           <button type="submit" className="btn solid" disabled={saving}>

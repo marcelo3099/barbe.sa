@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { services as servicesApi } from "../../api/endpoints";
 import ErrorMessage from "../../components/ErrorMessage";
+import FieldErrors from "../../components/FieldErrors";
 import { centsToInput, formatPrice, parsePriceInput } from "../../lib/money";
 import "../../styles/pages.css";
 
@@ -158,6 +159,7 @@ export default function Services() {
           </label>
         </div>
         {formError && <p role="alert" className="error">{formError}</p>}
+        <FieldErrors error={apiError} />
         <div className="row-actions">
           <button type="submit" className="btn solid" disabled={submitting}>
             {editingId ? "Salvar alterações" : "Criar serviço"}
